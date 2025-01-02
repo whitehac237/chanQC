@@ -89,14 +89,6 @@
         // Lưu video vào danh sách
         async function saveVideoToList(videoId) {
             const savedVideos = document.getElementById('saved-videos');
-
-            // Kiểm tra trùng lặp
-            if ([...savedVideos.children].some(li => li.dataset.videoId === videoId)) {
-                alert("Video đã tồn tại trong danh sách!");
-                return;
-            }
-
-            // Lấy tiêu đề video
             const videoTitle = await getVideoTitle(videoId);
 
             // Tạo phần tử mới
@@ -110,6 +102,36 @@
 
             listItem.appendChild(videoLink);
             savedVideos.appendChild(listItem);
+
+            // Lưu vào localStorage
+            saveToLocalStorage(videoId, videoTitle);
+        }
+
+        // Lưu danh sách video vào localStorage
+        function saveToLocalStorage(videoId, videoTitle) {
+            const videoList = JSON.parse(localStorage.getItem('videoList')) || [];
+            if (!videoList.some(video => video.id === videoId)) {
+                videoList.push({ id: videoId, title: videoTitle });
+                localStorage.setItem('videoList', JSON.stringify(videoList));
+            }
+        }
+
+        // Tải danh sách video từ localStorage
+        function loadFromLocalStorage() {
+            const savedVideos = document.getElementById('saved-videos');
+            const videoList = JSON.parse(localStorage.getItem('videoList')) || [];
+            videoList.forEach(video => {
+                const listItem = document.createElement('li');
+                listItem.dataset.videoId = video.id;
+
+                const videoLink = document.createElement('a');
+                videoLink.textContent = video.title;
+                videoLink.href = "#";
+                videoLink.onclick = () => updateVideo(video.id);
+
+                listItem.appendChild(videoLink);
+                savedVideos.appendChild(listItem);
+            });
         }
 
         // Bắt sự kiện nhấn nút "Xem Video"
@@ -129,6 +151,9 @@
                 alert("URL không hợp lệ. Vui lòng nhập lại!");
             }
         });
+
+        // Tải danh sách video khi trang được tải
+        document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
 
         // Xử lý tự động cập nhật video khi thay đổi URL trong thanh địa chỉ
         const urlParams = new URLSearchParams(window.location.search);
