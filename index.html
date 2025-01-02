@@ -4,27 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xem Video YouTube</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input {
+            padding: 10px;
+            width: 400px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>Xem Video YouTube</h1>
-    <div id="video-container">
+
+    <!-- Ô nhập liệu và nút xem video -->
+    <div>
+        <input type="text" id="youtube-url" placeholder="Nhập URL YouTube vào đây">
+        <button id="play-video">Xem Video</button>
+    </div>
+
+    <!-- Khu vực hiển thị video -->
+    <div id="video-container" style="margin-top: 20px;">
         <iframe id="youtube-player" width="560" height="315" frameborder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
         </iframe>
     </div>
-    <script>
-        // Lấy ID video từ URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const videoId = urlParams.get('video');
 
-        // Kiểm tra nếu có ID video
-        if (videoId) {
-            // Gắn URL video vào iframe
-            const iframe = document.getElementById('youtube-player');
-            iframe.src = `https://www.youtube.com/embed/${videoId}`;
-        } else {
-            document.getElementById('video-container').innerHTML = '<p>Không tìm thấy video!</p>';
+    <script>
+        // Lấy ID video từ URL YouTube
+        function extractVideoId(url) {
+            const regex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/.*v=([^&]+)|youtu\.be\/([^?&]+)/;
+            const match = url.match(regex);
+            return match ? match[1] || match[2] : null;
+        }
+
+        // Gắn video vào iframe
+        function updateVideo(videoId) {
+            if (videoId) {
+                const iframe = document.getElementById('youtube-player');
+                iframe.src = `https://www.youtube.com/embed/${videoId}`;
+            } else {
+                alert("URL không hợp lệ. Vui lòng nhập lại!");
+            }
+        }
+
+        // Bắt sự kiện nhấn nút
+        document.getElementById('play-video').addEventListener('click', () => {
+            const url = document.getElementById('youtube-url').value;
+            const videoId = extractVideoId(url);
+            updateVideo(videoId);
+        });
+
+        // Xử lý tự động cập nhật video khi thay đổi URL trong thanh địa chỉ
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoIdFromUrl = urlParams.get('video');
+        if (videoIdFromUrl) {
+            updateVideo(videoIdFromUrl);
         }
     </script>
 </body>
