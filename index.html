@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xem Video YouTube</title>
+    <title>Xem và Lưu Trữ Video YouTube</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -59,11 +59,21 @@
     </div>
 
     <script>
+        const YOUTUBE_API_KEY = 'AIzaSyBqmuejiUJ5kQlVfvwkZW_KFUDSRyrwZmo'; // API Key của bạn
+
         // Lấy ID video từ URL YouTube
         function extractVideoId(url) {
             const regex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/.*v=([^&]+)|youtu\.be\/([^?&]+)/;
             const match = url.match(regex);
             return match ? match[1] || match[2] : null;
+        }
+
+        // Lấy thông tin video từ YouTube API
+        async function getVideoTitle(videoId) {
+            const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`;
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            return data.items.length > 0 ? data.items[0].snippet.title : 'Không tìm thấy tiêu đề';
         }
 
         // Gắn video vào iframe
@@ -77,7 +87,7 @@
         }
 
         // Lưu video vào danh sách
-        function saveVideoToList(videoId) {
+        async function saveVideoToList(videoId) {
             const savedVideos = document.getElementById('saved-videos');
 
             // Kiểm tra trùng lặp
@@ -86,12 +96,15 @@
                 return;
             }
 
+            // Lấy tiêu đề video
+            const videoTitle = await getVideoTitle(videoId);
+
             // Tạo phần tử mới
             const listItem = document.createElement('li');
             listItem.dataset.videoId = videoId;
 
             const videoLink = document.createElement('a');
-            videoLink.textContent = `Video ID: ${videoId}`;
+            videoLink.textContent = videoTitle;
             videoLink.href = "#";
             videoLink.onclick = () => updateVideo(videoId);
 
