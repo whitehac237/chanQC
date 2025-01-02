@@ -17,15 +17,31 @@
         button {
             padding: 10px;
         }
+        #video-list {
+            margin-top: 20px;
+        }
+        #video-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #video-list li {
+            margin: 5px 0;
+        }
+        #video-list a {
+            text-decoration: none;
+            color: blue;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <h1>Xem Video YouTube</h1>
+    <h1>Xem và Lưu Trữ Video YouTube</h1>
 
     <!-- Ô nhập liệu và nút xem video -->
     <div>
         <input type="text" id="youtube-url" placeholder="Nhập URL YouTube vào đây">
         <button id="play-video">Xem Video</button>
+        <button id="save-video">Lưu Video</button>
     </div>
 
     <!-- Khu vực hiển thị video -->
@@ -34,6 +50,12 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
         </iframe>
+    </div>
+
+    <!-- Danh sách lưu trữ video -->
+    <div id="video-list">
+        <h2>Danh Sách Video</h2>
+        <ul id="saved-videos"></ul>
     </div>
 
     <script>
@@ -54,11 +76,45 @@
             }
         }
 
-        // Bắt sự kiện nhấn nút
+        // Lưu video vào danh sách
+        function saveVideoToList(videoId) {
+            const savedVideos = document.getElementById('saved-videos');
+
+            // Kiểm tra trùng lặp
+            if ([...savedVideos.children].some(li => li.dataset.videoId === videoId)) {
+                alert("Video đã tồn tại trong danh sách!");
+                return;
+            }
+
+            // Tạo phần tử mới
+            const listItem = document.createElement('li');
+            listItem.dataset.videoId = videoId;
+
+            const videoLink = document.createElement('a');
+            videoLink.textContent = `Video ID: ${videoId}`;
+            videoLink.href = "#";
+            videoLink.onclick = () => updateVideo(videoId);
+
+            listItem.appendChild(videoLink);
+            savedVideos.appendChild(listItem);
+        }
+
+        // Bắt sự kiện nhấn nút "Xem Video"
         document.getElementById('play-video').addEventListener('click', () => {
             const url = document.getElementById('youtube-url').value;
             const videoId = extractVideoId(url);
             updateVideo(videoId);
+        });
+
+        // Bắt sự kiện nhấn nút "Lưu Video"
+        document.getElementById('save-video').addEventListener('click', () => {
+            const url = document.getElementById('youtube-url').value;
+            const videoId = extractVideoId(url);
+            if (videoId) {
+                saveVideoToList(videoId);
+            } else {
+                alert("URL không hợp lệ. Vui lòng nhập lại!");
+            }
         });
 
         // Xử lý tự động cập nhật video khi thay đổi URL trong thanh địa chỉ
