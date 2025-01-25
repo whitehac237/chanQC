@@ -50,10 +50,7 @@
 
     <!-- Khu vực hiển thị video -->
     <div id="video-container" style="margin-top: 20px;">
-        <iframe id="youtube-player" width="560" height="315" frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
-        </iframe>
+        <div id="player"></div> <!-- Thay thế iframe bằng div -->
         <button id="save-time">Lưu Thời Gian</button> <!-- Nút lưu thời gian -->
     </div>
 
@@ -63,8 +60,31 @@
         <ul id="saved-videos"></ul>
     </div>
 
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         const YOUTUBE_API_KEY = 'AIzaSyBqmuejiUJ5kQlVfvwkZW_KFUDSRyrwZmo'; // API Key của bạn
+        let player;
+        let currentVideoId = '';
+
+        // Thiết lập YouTube Player
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '315',
+                width: '560',
+                events: {
+                    'onReady': onPlayerReady,
+                }
+            });
+        }
+
+        // Gọi lại khi player đã sẵn sàng
+        function onPlayerReady(event) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const videoIdFromUrl = urlParams.get('video');
+            if (videoIdFromUrl) {
+                loadVideo(videoIdFromUrl);
+            }
+        }
 
         // Lấy ID video từ URL YouTube
         function extractVideoId(url) {
@@ -81,19 +101,14 @@
             return data.items.length > 0 ? data.items[0].snippet.title : 'Không tìm thấy tiêu đề';
         }
 
-        // Gắn video vào iframe
-        function updateVideo(videoId) {
-            if (videoId) {
-                const iframe = document.getElementById('youtube-player');
-                iframe.src = `https://www.youtube.com/embed/${videoId}`;
-                
-                // Kiểm tra nếu có thời gian lưu trữ trước đó
-                const savedTime = localStorage.getItem(`time_${videoId}`);
-                if (savedTime) {
-                    iframe.src += `?start=${savedTime}`;
-                }
+        // Gắn video vào player
+        function loadVideo(videoId) {
+            currentVideoId = videoId;
+            const savedTime = localStorage.getItem(`time_${videoId}`);
+            if (savedTime) {
+                player.loadVideoById(videoId, parseInt(savedTime));
             } else {
-                alert("URL không hợp lệ. Vui lòng nhập lại!");
+                player.loadVideoById(videoId);
             }
         }
 
@@ -109,7 +124,7 @@
             const videoLink = document.createElement('a');
             videoLink.textContent = videoTitle;
             videoLink.href = "#";
-            videoLink.onclick = () => updateVideo(videoId);
+            videoLink.onclick = () => loadVideo(videoId);
 
             listItem.appendChild(videoLink);
             savedVideos.appendChild(listItem);
@@ -129,15 +144,8 @@
 
         // Lưu thời gian hiện tại của video
         function saveCurrentTime() {
-            const iframe = document.getElementById('youtube-player');
-            iframe.contentWindow.postMessage('{"event":"command","func":"getCurrentTime","args":""}', '*');
-            window.addEventListener('message', (event) => {
-                if (event.origin !== 'https://www.youtube.com') return;
-                const currentTime = Math.floor(event.data.info);
-                const videoUrl = iframe.src;
-                const videoId = extractVideoId(videoUrl);
-                localStorage.setItem(`time_${videoId}`, currentTime);
-            }, false);
+            const currentTime = Math.floor(player.getCurrentTime());
+            localStorage.setItem(`time_${currentVideoId}`, currentTime);
         }
 
         // Tải danh sách video từ localStorage
@@ -151,7 +159,7 @@
                 const videoLink = document.createElement('a');
                 videoLink.textContent = video.title;
                 videoLink.href = "#";
-                videoLink.onclick = () => updateVideo(video.id);
+                videoLink.onclick = () => loadVideo(video.id);
 
                 listItem.appendChild(videoLink);
                 savedVideos.appendChild(listItem);
@@ -162,7 +170,7 @@
         document.getElementById('play-video').addEventListener('click', () => {
             const url = document.getElementById('youtube-url').value;
             const videoId = extractVideoId(url);
-            updateVideo(videoId);
+            loadVideo(videoId);
         });
 
         // Bắt sự kiện nhấn nút "Lưu Video"
@@ -183,13 +191,6 @@
 
         // Tải danh sách video khi trang được tải
         document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
-
-        // Xử lý tự động cập nhật video khi thay đổi URL trong thanh địa chỉ
-        const urlParams = new URLSearchParams(window.location.search);
-        const videoIdFromUrl = urlParams.get('video');
-        if (videoIdFromUrl) {
-            updateVideo(videoIdFromUrl);
-        }
     </script>
 </body>
 </html>
