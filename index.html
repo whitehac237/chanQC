@@ -1,19 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
-     
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xem và Lưu Trữ Video YouTube</title>
     <style>
-          
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-               font-size: 10px;
-    background: url(https://img.uhdpaper.com/wallpaper/anime-girl-white-hair-210@0@k);
-    background-size: cover;
-    background-repeat: no-repeat;
+            font-size: 10px;
+            background: url(https://img.uhdpaper.com/wallpaper/anime-girl-white-hair-210@0@k);
+            background-size: cover;
+            background-repeat: no-repeat;
         }
         input {
             padding: 10px;
@@ -56,6 +54,7 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
         </iframe>
+        <button id="save-time">Lưu Thời Gian</button> <!-- Nút lưu thời gian -->
     </div>
 
     <!-- Danh sách lưu trữ video -->
@@ -87,6 +86,12 @@
             if (videoId) {
                 const iframe = document.getElementById('youtube-player');
                 iframe.src = `https://www.youtube.com./embed/${videoId}`;
+                
+                // Kiểm tra nếu có thời gian lưu trữ trước đó
+                const savedTime = localStorage.getItem(`time_${videoId}`);
+                if (savedTime) {
+                    iframe.src += `?start=${savedTime}`;
+                }
             } else {
                 alert("URL không hợp lệ. Vui lòng nhập lại!");
             }
@@ -120,6 +125,15 @@
                 videoList.push({ id: videoId, title: videoTitle });
                 localStorage.setItem('videoList', JSON.stringify(videoList));
             }
+        }
+
+        // Lưu thời gian hiện tại của video
+        function saveCurrentTime() {
+            const iframe = document.getElementById('youtube-player');
+            const videoUrl = iframe.src;
+            const videoId = extractVideoId(videoUrl);
+            const currentTime = Math.floor(iframe.contentWindow.document.querySelector('video').currentTime);
+            localStorage.setItem(`time_${videoId}`, currentTime);
         }
 
         // Tải danh sách video từ localStorage
@@ -156,6 +170,11 @@
             } else {
                 alert("URL không hợp lệ. Vui lòng nhập lại!");
             }
+        });
+
+        // Bắt sự kiện nhấn nút "Lưu Thời Gian"
+        document.getElementById('save-time').addEventListener('click', () => {
+            saveCurrentTime();
         });
 
         // Tải danh sách video khi trang được tải
