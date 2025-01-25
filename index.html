@@ -85,7 +85,7 @@
         function updateVideo(videoId) {
             if (videoId) {
                 const iframe = document.getElementById('youtube-player');
-                iframe.src = `https://www.youtube.com./embed/${videoId}`;
+                iframe.src = `https://www.youtube.com/embed/${videoId}`;
                 
                 // Kiểm tra nếu có thời gian lưu trữ trước đó
                 const savedTime = localStorage.getItem(`time_${videoId}`);
@@ -130,10 +130,14 @@
         // Lưu thời gian hiện tại của video
         function saveCurrentTime() {
             const iframe = document.getElementById('youtube-player');
-            const videoUrl = iframe.src;
-            const videoId = extractVideoId(videoUrl);
-            const currentTime = Math.floor(iframe.contentWindow.document.querySelector('video').currentTime);
-            localStorage.setItem(`time_${videoId}`, currentTime);
+            iframe.contentWindow.postMessage('{"event":"command","func":"getCurrentTime","args":""}', '*');
+            window.addEventListener('message', (event) => {
+                if (event.origin !== 'https://www.youtube.com') return;
+                const currentTime = Math.floor(event.data.info);
+                const videoUrl = iframe.src;
+                const videoId = extractVideoId(videoUrl);
+                localStorage.setItem(`time_${videoId}`, currentTime);
+            }, false);
         }
 
         // Tải danh sách video từ localStorage
